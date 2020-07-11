@@ -33,7 +33,10 @@ func getClient(config *oauth2.Config) (client *http.Client, err error) {
 
 	tok, err := tokenFromFile(tokFile)
 	if err != nil {
-		tok = getTokenFromWeb(config)
+		tok, err = getTokenFromWeb(config)
+		if err != nil {
+			return
+		}
 		err = saveToken(tokFile, tok)
 		if err != nil {
 			return
@@ -43,21 +46,21 @@ func getClient(config *oauth2.Config) (client *http.Client, err error) {
 }
 
 // Request a token from the web, then returns the retrieved token.
-func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
+func getTokenFromWeb(config *oauth2.Config) (*oauth2.Token, error) {
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 	fmt.Printf("Go to the following link in your browser then type the "+
 		"authorization code: \n%v\n", authURL)
 
 	var authCode string
 	if _, err := fmt.Scan(&authCode); err != nil {
-		log.Fatalf("Unable to read authorization code: %v", err)
+		return nil, fmt.Errorf("Unable to read authorization code: %w", err)
 	}
 
 	tok, err := config.Exchange(context.TODO(), authCode)
 	if err != nil {
-		log.Fatalf("Unable to retrieve token from web: %v", err)
+		return nil, fmt.Errorf("Unable to retrieve token from web: %w", err)
 	}
-	return tok
+	return tok, nil
 }
 
 // Retrieves a token from a local file.
