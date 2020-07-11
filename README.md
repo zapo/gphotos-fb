@@ -1,5 +1,7 @@
 # gphotofb
-Linux Framebuffer display of random google photo picture
+Linux Framebuffer display of random google photo picture.
+
+Trying to make my Raspberry Pie useful!
 
 ## Usage
 ```
@@ -14,6 +16,16 @@ Usage of ./gphotofb:
 ```
 
 ## Build
+
+- For your arch:
 ```
 go build
 ```
+
+- For Raspberry Pie:
+
+I didn't figure out how to cross-compile it:
+
+`GOOS=linux GOARCH=arm GOARM=5 go build` fails to build the underlying `framebuffer` package.
+
+I ended up installing golang in my rbp and compile it locally in there which took forever.
