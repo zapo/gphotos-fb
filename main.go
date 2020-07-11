@@ -111,6 +111,13 @@ func randomPhotoURL(ctx context.Context, client *http.Client) (url string, err e
 	if err != nil {
 		return
 	}
+	err = photoslibraryService.SharedAlbums.List().Pages(ctx, func(res *photoslibrary.ListSharedAlbumsResponse) error {
+		albums = append(albums, res.SharedAlbums...)
+		return nil
+	})
+	if err != nil {
+		return
+	}
 
 	rand.Seed(time.Now().UTC().UnixNano())
 	randAlbum := albums[rand.Intn(len(albums)-1)]
