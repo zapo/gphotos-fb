@@ -140,10 +140,12 @@ func main() {
 	for {
 		select {
 		case <-show:
-			fmt.Println("trying", len(urls))
 			if len(urls) == 0 {
+				fmt.Println("Empty collection, skipping ...")
 				continue
 			}
+
+			fmt.Printf("Displaying random picture (total %d)\n", len(urls))
 
 			url := urls[rand.Intn(len(urls))]
 			image, err := fetchImage(url)
