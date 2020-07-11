@@ -24,28 +24,6 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-var photoCategories = []string{
-	"LANDSCAPES",
-	"RECEIPTS",
-	"CITYSCAPES",
-	"LANDMARKS",
-	"SELFIES",
-	"PEOPLE",
-	"PETS",
-	"WEDDINGS",
-	"BIRTHDAYS",
-	"DOCUMENTS",
-	"TRAVEL",
-	"ANIMALS",
-	"FOOD",
-	"SPORT",
-	"NIGHT",
-	"PERFORMANCES",
-	"WHITEBOARDS",
-	"SCREENSHOTS",
-	"UTILITY",
-}
-
 // Retrieve a token, saves the token, then returns the generated client.
 func getClient(config *oauth2.Config) (client *http.Client, err error) {
 	tokFile, err := xdg.CacheFile("gphotofb/token.json")
