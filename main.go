@@ -125,10 +125,16 @@ func randomPhotoURL(ctx context.Context, client *http.Client) (url string, err e
 		return "", fmt.Errorf("No album found")
 	}
 
-	randAlbum := albums[rand.Intn(len(albums)-1)]
+	var album *photoslibrary.Album
+
+	if len(albums) > 1 {
+		album = albums[rand.Intn(len(albums)-1)]
+	} else {
+		album = albums[0]
+	}
 
 	searchCall := photoslibraryService.MediaItems.Search(
-		&photoslibrary.SearchMediaItemsRequest{AlbumId: randAlbum.Id},
+		&photoslibrary.SearchMediaItemsRequest{AlbumId: album.Id},
 	)
 
 	var items []*photoslibrary.MediaItem
@@ -151,8 +157,16 @@ func randomPhotoURL(ctx context.Context, client *http.Client) (url string, err e
 		return "", fmt.Errorf("Empty random album")
 	}
 
-	randItemIndex := rand.Intn(len(items) - 1)
-	return items[randItemIndex].BaseUrl + "=w2048-h1024", nil
+	var item *photoslibrary.MediaItem
+
+	if len(items) > 1 {
+		randItemIndex := rand.Intn(len(items) - 1)
+		item = items[randItemIndex]
+	} else {
+		item = items[0]
+	}
+
+	return item.BaseUrl + "=w2048-h1024", nil
 }
 
 func drawImage(fb *framebuffer.FrameBuffer, src image.Image) error {
