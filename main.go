@@ -25,7 +25,7 @@ import (
 )
 
 // Retrieve a token, saves the token, then returns the generated client.
-func getClient(config *oauth2.Config) (client *http.Client, err error) {
+func getClient(ctx context.Context, config *oauth2.Config) (client *http.Client, err error) {
 	tokFile, err := xdg.CacheFile("gphotofb/token.json")
 	if err != nil {
 		return
@@ -33,7 +33,7 @@ func getClient(config *oauth2.Config) (client *http.Client, err error) {
 
 	tok, err := tokenFromFile(tokFile)
 	if err != nil {
-		tok, err = getTokenFromWeb(config)
+		tok, err = getTokenFromWeb(ctx, config)
 		if err != nil {
 			return
 		}
@@ -46,7 +46,7 @@ func getClient(config *oauth2.Config) (client *http.Client, err error) {
 }
 
 // Request a token from the web, then returns the retrieved token.
-func getTokenFromWeb(config *oauth2.Config) (*oauth2.Token, error) {
+func getTokenFromWeb(ctx context.Context, config *oauth2.Config) (*oauth2.Token, error) {
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 	fmt.Printf("Go to the following link in your browser then type the "+
 		"authorization code: \n%v\n", authURL)
@@ -56,7 +56,7 @@ func getTokenFromWeb(config *oauth2.Config) (*oauth2.Token, error) {
 		return nil, fmt.Errorf("Unable to read authorization code: %w", err)
 	}
 
-	tok, err := config.Exchange(context.TODO(), authCode)
+	tok, err := config.Exchange(ctx, authCode)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to retrieve token from web: %w", err)
 	}
@@ -187,7 +187,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	client, err := getClient(config)
+	client, err := getClient(ctx, config)
 	if err != nil {
 		log.Fatalf("Unable to initialize oauth client: %v", err)
 	}
