@@ -78,7 +78,8 @@ func drawImage(fb *framebuffer.FrameBuffer, src image.Image) error {
 	background := image.NewRGBA(frameBounds)
 	draw.Draw(background, frameBounds, image.Black, image.ZP, draw.Src)
 
-	resized := imaging.Fit(converted, frameBounds.Dx(), frameBounds.Dy(), imaging.Lanczos)
+	resized := imaging.Resize(converted, frameBounds.Dx(), 0, imaging.Lanczos)
+	resized = imaging.Fit(resized, frameBounds.Dx(), frameBounds.Dy(), imaging.Lanczos)
 	final := imaging.PasteCenter(background, resized)
 
 	draw.Draw(fb, frameBounds, final, image.ZP, draw.Src)
