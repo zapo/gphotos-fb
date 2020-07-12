@@ -18,10 +18,11 @@ Usage of ./gphotofb:
 ## Build
 
 ```
-go build ./...
+make
 ```
 
-Note that I didn't figure out how to cross-compile it for raspberry pie.
-`GOOS=linux GOARCH=arm GOARM=5 go build ./...` fails to build the underlying `framebuffer` package.
+or
 
-I ended up installing go on my rbp and compile it in there which took forever.
+```
+go build -o gphotofb cmd/main.go
+```
