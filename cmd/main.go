@@ -69,13 +69,19 @@ func fetchImage(url string) (img image.Image, err error) {
 }
 
 func drawImage(fb *framebuffer.FrameBuffer, src image.Image) error {
-	b := src.Bounds()
-	converted := image.NewNRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
-	draw.Draw(converted, converted.Bounds(), src, b.Min, draw.Src)
+	srcBounds := src.Bounds()
+	frameBounds := fb.Bounds()
 
-	resized := imaging.Fill(converted, fb.Bounds().Max.X, fb.Bounds().Max.Y, imaging.Center, imaging.Lanczos)
+	converted := image.NewNRGBA(srcBounds)
+	draw.Draw(converted, srcBounds, src, image.ZP, draw.Src)
 
-	draw.Draw(fb, fb.Bounds(), resized, b.Bounds().Min, draw.Over)
+	background := image.NewRGBA(frameBounds)
+	draw.Draw(background, frameBounds, image.Black, image.ZP, draw.Src)
+
+	resized := imaging.Fit(converted, frameBounds.Dx(), frameBounds.Dy(), imaging.Lanczos)
+	final := imaging.PasteCenter(background, resized)
+
+	draw.Draw(fb, frameBounds, final, image.ZP, draw.Src)
 	return fb.Flush()
 }
 
