@@ -120,7 +120,7 @@ func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	urlStream := make(chan string)
-	show := make(chan bool)
+	show := make(chan struct{})
 
 	go func() {
 		err := loadPhotoURLs(ctx, client, urlStream)
@@ -132,7 +132,7 @@ func main() {
 	go func() {
 		for {
 			time.Sleep(duration)
-			show <- true
+			show <- struct{}{}
 		}
 	}()
 
@@ -149,7 +149,7 @@ func main() {
 
 			url := urls[rand.Intn(len(urls))]
 			image, err := fetchImage(url)
-			if err != nil {
+			if err != nil || image == nil {
 				log.Printf("Unable to load photo at %s: %v", url, err)
 			}
 
