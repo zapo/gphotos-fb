@@ -49,8 +49,8 @@ func loadPhotoURLs(ctx context.Context, client *http.Client, urls chan string) (
 	return
 }
 
-func fetchImage(url string) (img image.Image, err error) {
-	response, err := http.Get(url + "=w2048-h1024")
+func fetchImage(url string, width uint16, height uint16) (img image.Image, err error) {
+	response, err := http.Get(fmt.Sprintf("%s=w%d-h%d", url, width, height))
 	if err != nil {
 		return
 	}
@@ -144,25 +144,30 @@ func main() {
 	}()
 
 	urls := []string{}
+	frameWidth := fb.Bounds().Dx()
+	frameHeight := fb.Bounds().Dy()
+
+	log.Printf("Drawing on %dx%d surface\n", frameWidth, frameHeight)
+
 	for {
 		select {
 		case <-show:
 			if len(urls) == 0 {
-				fmt.Println("Empty collection, skipping ...")
+				log.Println("Empty collection, skipping ...")
 				continue
 			}
 
-			fmt.Printf("Displaying random picture (total %d)\n", len(urls))
+			log.Printf("Displaying random picture (total %d)\n", len(urls))
 
 			url := urls[rand.Intn(len(urls))]
-			image, err := fetchImage(url)
+			image, err := fetchImage(url, uint16(frameWidth), uint16(frameHeight))
 			if err != nil || image == nil {
-				log.Printf("Unable to load photo at %s: %v", url, err)
+				log.Printf("Unable to load photo at %s: %v\n", url, err)
 			}
 
 			err = drawImage(fb, image)
 			if err != nil {
-				log.Printf("Unable to draw photo at %s: %v", url, err)
+				log.Printf("Unable to draw photo at %s: %v\n", url, err)
 			}
 		case url := <-urlStream:
 			urls = append(urls, url)
