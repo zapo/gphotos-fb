@@ -8,7 +8,7 @@ Trying to make my Raspberry Pie useful!
 $ gphotofb --help
 Usage of ./gphotofb:
   -c string
-        Credentials path (default "./credentials.json")
+        Credentials path (default "$HOME/.config/gphotofb/credentials.json")
   -d string
         Path to framebuffer (default "/dev/fb0")
   -t string

@@ -16,6 +16,7 @@ import (
 
 	"gphotofb/internal/auth"
 
+	"github.com/adrg/xdg"
 	"github.com/disintegration/imaging"
 	"github.com/gphotosuploader/googlemirror/api/photoslibrary/v1"
 	"github.com/zenhack/framebuffer-go"
@@ -87,10 +88,15 @@ func drawImage(fb *framebuffer.FrameBuffer, src image.Image) error {
 }
 
 func main() {
+
 	var device, timeout, credsPath string
 	flag.StringVar(&device, "d", "/dev/fb0", "Path to framebuffer")
 	flag.StringVar(&timeout, "t", "10s", "Rotation timeout")
-	flag.StringVar(&credsPath, "c", "./credentials.json", "Credentials path")
+	defaultCreds, err := xdg.ConfigFile("gphotofb/credentials.json")
+	if err != nil {
+		defaultCreds = "./credentials.json"
+	}
+	flag.StringVar(&credsPath, "c", defaultCreds, "Credentials path")
 	flag.Parse()
 
 	duration, err := time.ParseDuration(timeout)
