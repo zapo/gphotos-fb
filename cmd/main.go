@@ -24,7 +24,7 @@ import (
 )
 
 func loadPhotoURLs(ctx context.Context, client *http.Client, urls chan string) (err error) {
-	photoslibraryService, err := photoslibrary.New(client)
+	//photoslibraryService, err := photoslibrary.New(client)
 	if err != nil {
 		return
 	}
