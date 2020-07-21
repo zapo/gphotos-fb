@@ -1,4 +1,4 @@
-module gphotofb
+module gphotos-fb
 
 go 1.14
 

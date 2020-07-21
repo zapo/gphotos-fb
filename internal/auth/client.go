@@ -13,7 +13,7 @@ import (
 
 // GetClient retrieves a token, saves the token, then returns the generated client.
 func GetClient(ctx context.Context, config *oauth2.Config) (client *http.Client, err error) {
-	tokFile, err := xdg.CacheFile("gphotofb/token.json")
+	tokFile, err := xdg.CacheFile("gphotos-fb/token.json")
 	if err != nil {
 		return
 	}

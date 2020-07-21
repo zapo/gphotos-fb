@@ -14,7 +14,7 @@ import (
 	"net/http"
 	"time"
 
-	"gphotofb/internal/auth"
+	"gphotos-fb/internal/auth"
 
 	"github.com/adrg/xdg"
 	"github.com/disintegration/imaging"
@@ -92,7 +92,7 @@ func main() {
 	var device, timeout, credsPath string
 	flag.StringVar(&device, "d", "/dev/fb0", "Path to framebuffer")
 	flag.StringVar(&timeout, "t", "10s", "Rotation timeout")
-	defaultCreds, err := xdg.ConfigFile("gphotofb/credentials.json")
+	defaultCreds, err := xdg.ConfigFile("gphotos-fb/credentials.json")
 	if err != nil {
 		defaultCreds = "./credentials.json"
 	}

@@ -1,14 +1,14 @@
-# gphotofb
-Linux Framebuffer display of random google photo picture.
+# gphotos-fb
+Linux Framebuffer display of a random google photo picture.
 
 Trying to make my Raspberry Pie useful!
 
 ## Usage
 ```
-$ gphotofb --help
-Usage of ./gphotofb:
+$ gphotos-fb --help
+Usage of ./gphotos-fb:
   -c string
-        Credentials path (default "$HOME/.config/gphotofb/credentials.json")
+        Credentials path (default "$HOME/.config/gphotos-fb/credentials.json")
   -d string
         Path to framebuffer (default "/dev/fb0")
   -t string
@@ -24,5 +24,5 @@ make
 or
 
 ```
-go build -o gphotofb cmd/main.go
+go build -o gphotos-fb cmd/main.go
 ```

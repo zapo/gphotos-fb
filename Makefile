@@ -1,4 +1,4 @@
 all: build
 
 build:
-	go build -o gphotofb cmd/main.go
+	go build -o gphotos-fb cmd/main.go
