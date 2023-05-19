@@ -8,7 +8,7 @@ require (
 	github.com/gphotosuploader/google-photos-api-client-go/v2 v2.4.0
 	github.com/zenhack/framebuffer-go v0.0.0-20130825022503-db288b3f69ed
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 )
 
 require (
@@ -20,7 +20,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/mediocregopher/radix/v3 v3.2.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.1+incompatible // indirect
-	golang.org/x/image v0.0.0-20200618115811-c13761719519 // indirect
+	golang.org/x/image v0.5.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	google.golang.org/api v0.29.0 // indirect
