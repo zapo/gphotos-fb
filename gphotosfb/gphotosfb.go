@@ -12,7 +12,8 @@ import (
 	"time"
 
 	"github.com/disintegration/imaging"
-	gphotos "github.com/gphotosuploader/google-photos-api-client-go/v2"
+	gphotos "github.com/gphotosuploader/google-photos-api-client-go/v3"
+	mediaitems "github.com/gphotosuploader/google-photos-api-client-go/v3/media_items"
 	"github.com/zenhack/framebuffer-go"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/sync/errgroup"
@@ -54,21 +55,23 @@ func loadPhotoURLs(ctx context.Context, client *http.Client, urlList *urlList) e
 		return fmt.Errorf("gphotos.NewClient: %w", err)
 	}
 
-	albums, err := photoslibraryService.Albums.List(ctx)
-	if err != nil {
-		return fmt.Errorf("photoslibraryService.Albums.List: %w", err)
-	}
-
-	for _, a := range albums {
-		items, err := photoslibraryService.MediaItems.ListByAlbum(ctx, a.ID)
+	var pageToken string
+	for {
+		items, nextToken, err := photoslibraryService.MediaItems.PaginatedList(ctx, &mediaitems.PaginatedListOptions{
+			PageToken: pageToken,
+		})
 		if err != nil {
-			return fmt.Errorf("photoslibraryService.MediaItems.ListByAlbum: %w", err)
+			return fmt.Errorf("photoslibraryService.MediaItems.List: %w", err)
 		}
+		if nextToken == "" {
+			break
+		}
+		pageToken = nextToken
+
 		urls := make([]string, len(items))
 		for i, item := range items {
 			urls[i] = item.BaseURL
 		}
-
 		urlList.push(urls...)
 	}
 
@@ -182,7 +185,8 @@ func Run(ctx context.Context, conf *Config) error {
 				}
 
 				if err := display(ctx, fb, url); err != nil {
-					return fmt.Errorf("display: %w", err)
+					fmt.Printf("display: %s\n", err)
+					continue
 				}
 			}
 		}
