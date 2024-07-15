@@ -43,7 +43,7 @@ func getTokenFromWeb(ctx context.Context, config *oauth2.Config) (*oauth2.Token,
 		return nil, fmt.Errorf("fmt.Scan: %w", err)
 	}
 
-	tok, err := config.Exchange(ctx, authCode)
+	tok, err := config.Exchange(ctx, authCode, oauth2.AccessTypeOffline)
 	if err != nil {
 		return nil, fmt.Errorf("config.Exchange: %w", err)
 	}
