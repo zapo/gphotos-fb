@@ -2,12 +2,14 @@ package gphotosfb
 
 import (
 	"context"
+  "errors"
 	"fmt"
 	"image"
 	"image/draw"
 	"math/rand"
 	"net/http"
 	"os"
+	"log"
 	"sync"
 	"time"
 
@@ -19,45 +21,56 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type urlList struct {
+type idList struct {
 	mut  sync.RWMutex
-	urls []string
+	ids []string
 	rng  *rand.Rand
 }
 
-func newURLList() *urlList {
-	return &urlList{
-		urls: make([]string, 0, 1024),
+func newIDList() *idList {
+	return &idList{
+		ids: make([]string, 0, 1024),
 		rng:  rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
-func (l *urlList) rand() (string, bool) {
+func (l *idList) rand() (string, bool) {
 	l.mut.RLock()
 	defer l.mut.RUnlock()
 
-	if len(l.urls) == 0 {
+	if len(l.ids) == 0 {
 		return "", false
 	}
 
-	return l.urls[l.rng.Intn(len(l.urls)-1)], true
+	return l.ids[l.rng.Intn(len(l.ids)-1)], true
 }
 
-func (l *urlList) push(urls ...string) {
+func (l *idList) push(ids ...string) {
 	l.mut.Lock()
 	defer l.mut.Unlock()
-	l.urls = append(l.urls, urls...)
+	l.ids = append(l.ids, ids...)
 }
 
-func loadPhotoURLs(ctx context.Context, client *http.Client, urlList *urlList) error {
-	photoslibraryService, err := gphotos.NewClient(client)
-	if err != nil {
-		return fmt.Errorf("gphotos.NewClient: %w", err)
-	}
+type slideshow struct {
+  client *gphotos.Client
+  library *idList
+  width uint16
+  height uint16
+}
 
+func newSlideShow(client *gphotos.Client, width, height uint16) *slideshow {
+  return &slideshow{
+    client: client,
+    library: newIDList(),
+    width: width,
+    height: height,
+  }
+}
+
+func (s *slideshow) loadLibrary(ctx context.Context) error {
 	var pageToken string
 	for {
-		items, nextToken, err := photoslibraryService.MediaItems.PaginatedList(ctx, &mediaitems.PaginatedListOptions{
+		items, nextToken, err := s.client.MediaItems.PaginatedList(ctx, &mediaitems.PaginatedListOptions{
 			PageToken: pageToken,
 		})
 		if err != nil {
@@ -68,18 +81,28 @@ func loadPhotoURLs(ctx context.Context, client *http.Client, urlList *urlList) e
 		}
 		pageToken = nextToken
 
-		urls := make([]string, len(items))
+		ids := make([]string, len(items))
 		for i, item := range items {
-			urls[i] = item.BaseURL
+			ids[i] = item.ID
 		}
-		urlList.push(urls...)
+		s.library.push(ids...)
 	}
 
 	return nil
 }
 
-func fetchImage(ctx context.Context, url string, width, height uint16) (image.Image, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s=w%d-h%d", url, width, height), nil)
+func (s *slideshow) nextImage(ctx context.Context) (image.Image, error) {
+	id, ok := s.library.rand()
+	if !ok {
+		return nil, errors.New("empty library")
+	}
+
+	mediaItem, err := s.client.MediaItems.Get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("s.client.MediaItems.Get: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s=w%d-h%d", mediaItem.BaseURL, s.width, s.height), nil)
 	if err != nil {
 		return nil, fmt.Errorf("http.Get: %w", err)
 	}
@@ -122,21 +145,6 @@ type Config struct {
 	Credentials      string
 }
 
-func display(ctx context.Context, fb *framebuffer.FrameBuffer, url string) error {
-	frameWidth := uint16(fb.Bounds().Dx())
-	frameHeight := uint16(fb.Bounds().Dy())
-
-	image, err := fetchImage(ctx, url, frameWidth, frameHeight)
-	if err != nil {
-		return fmt.Errorf("fetchImage(%s): %w", url, err)
-	}
-
-	if err := drawImage(fb, image); err != nil {
-		return fmt.Errorf("drawImage(%s): %w", url, err)
-	}
-	return nil
-}
-
 func Run(ctx context.Context, conf *Config) error {
 	fb, err := framebuffer.Open(conf.Device)
 	if err != nil {
@@ -154,16 +162,24 @@ func Run(ctx context.Context, conf *Config) error {
 		return fmt.Errorf("google.CredentialsFromJSON: %w", err)
 	}
 
-	client, err := getClient(ctx, oauth2Config)
+	httpClient, err := getClient(ctx, oauth2Config)
 	if err != nil {
 		return fmt.Errorf("getClient: %w", err)
 	}
+	client, err := gphotos.NewClient(httpClient)
+	if err != nil {
+		return fmt.Errorf("gphotos.NewClient: %w", err)
+	}
 
 	group, ctx := errgroup.WithContext(ctx)
-	urls := newURLList()
+
+	frameWidth := uint16(fb.Bounds().Dx())
+	frameHeight := uint16(fb.Bounds().Dy())
+
+	slideshow := newSlideShow(client, frameWidth, frameHeight)
 
 	group.Go(func() error {
-		err := loadPhotoURLs(ctx, client, urls)
+		err := slideshow.loadLibrary(ctx)
 		if err != nil {
 			return fmt.Errorf("loadPhotoURLs: %w", err)
 		}
@@ -179,13 +195,14 @@ func Run(ctx context.Context, conf *Config) error {
 			case <-ctx.Done():
 				return ctx.Err()
 			case <-timer.C:
-				url, ok := urls.rand()
-				if !ok {
+				image, err := slideshow.nextImage(ctx)
+				if err != nil {
+					log.Printf("slideshow.nextImage: %s\n", err)
 					continue
 				}
 
-				if err := display(ctx, fb, url); err != nil {
-					fmt.Printf("display: %s\n", err)
+				if err := drawImage(fb, image); err != nil {
+					log.Printf("drawImage: %s\n", err)
 					continue
 				}
 			}
