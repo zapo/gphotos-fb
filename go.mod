@@ -1,6 +1,6 @@
 module gphotos-fb
 
-go 1.23.0
+go 1.25.0
 
 require (
 	github.com/adrg/xdg v0.4.0
@@ -17,7 +17,7 @@ require (
 	github.com/gphotosuploader/googlemirror v0.5.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
-	golang.org/x/image v0.18.0 // indirect
+	golang.org/x/image v0.38.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	google.golang.org/api v0.167.0 // indirect
 )
